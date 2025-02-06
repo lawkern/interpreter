@@ -35,9 +35,24 @@ static void *allocate(memarena *arena, memindex size, int count, int alignment)
    return memset(result, 0, count*size);
 }
 
+static bool encountered_error;
+
+static void error(int line, char *message)
+{
+   encountered_error = true;
+   fprintf(stderr, "[ERROR (%d)]: %s\n", line, message);
+}
+
 static void execute(memarena *perma, memarena trans, char *code)
 {
-   printf("%s\n", code);
+   if(code[0] == 'e')
+   {
+      error(0, "Successfully activated error handling.");
+   }
+   else
+   {
+      printf("%s\n", code);
+   }
 }
 
 static void execute_script(memarena *perma, memarena trans, char *path)
