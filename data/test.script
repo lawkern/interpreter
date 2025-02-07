@@ -1,1 +1,6 @@
 1 + 1;
+
+function Main :: (Arguments : []string)
+{
+   return (0);
+}

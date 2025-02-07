@@ -1,47 +1,20 @@
 /* (c) copyright 2025 Lawrence D. Kern ////////////////////////////////////// */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <stdint.h>
 typedef uint8_t u8;
+typedef uint64_t u64;
 
 #include <stddef.h>
 typedef ptrdiff_t memindex;
 
-#define countof(a) (sizeof(a) / sizeof((a)[0]))
-
-typedef struct {
-   u8 *begin;
-   u8 *end;
-} memarena;
-
-#define new(a, t, n) (t *)allocate((a), sizeof(t), (n), _Alignof(t))
-
-static void *allocate(memarena *arena, memindex size, int count, int alignment)
-{
-   int padding = -(uintptr_t)arena->begin & (alignment - 1);
-   if((arena->end - arena->begin - padding)/size < count)
-   {
-      fprintf(stderr, "OOM: Failed to allocate %ld bytes.\n", size*count);
-      assert(0);
-   }
-
-   void *result = arena->begin + padding;
-   arena->begin += (padding + count*size);
-
-   return memset(result, 0, count*size);
-}
-
-static bool encountered_error;
-
-static void error(int line, char *message)
-{
-   encountered_error = true;
-   fprintf(stderr, "[ERROR (%d)]: %s\n", line, message);
-}
+#include "shared.c"
+#include "lexer.c"
 
 static void execute(memarena *perma, memarena trans, char *code)
 {
@@ -51,7 +24,7 @@ static void execute(memarena *perma, memarena trans, char *code)
    }
    else
    {
-      printf("%s\n", code);
+      lex(perma, trans, code);
    }
 }
 
