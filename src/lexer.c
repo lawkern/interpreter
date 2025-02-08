@@ -256,6 +256,22 @@ static void lex(memarena *perma, memarena trans, char *code)
 
          } break;
 
+         case '"': {
+            token->kind = TOKEN_STRING;
+
+            memindex length = 1;
+            while(code[length] && code[length] != '"')
+            {
+               length++;
+            }
+            while(code[length] && code[length] == '"')
+            {
+               length++;
+            }
+
+            token->lexeme.length = length;
+         } break;
+
          case '1': case '2': case '3': case '4': case '5':
          case '6': case '7': case '8': case '9': case '0':
          {
