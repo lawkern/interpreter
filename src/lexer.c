@@ -185,7 +185,6 @@ static void lex(memarena *perma, memarena trans, char *code)
          case 'u': case 'v': case 'w': case 'x': case 'y':
          case 'z':
          {
-            token->kind = TOKEN_IDENTIFIER;
             memindex length = 0;
             while(code[length] && is_identifier(code[length]))
             {
@@ -193,6 +192,61 @@ static void lex(memarena *perma, memarena trans, char *code)
             }
 
             token->lexeme.length = length;
+
+            // TODO: This is obviously silly. Implement string interning.
+            if(string_equals(token->lexeme, S("struct")))
+            {
+               token->kind = TOKEN_STRUCT;
+            }
+            else if(string_equals(token->lexeme, S("function")))
+            {
+               token->kind = TOKEN_FUNCTION;
+            }
+            else if(string_equals(token->lexeme, S("if")))
+            {
+               token->kind = TOKEN_IF;
+            }
+            else if(string_equals(token->lexeme, S("else")))
+            {
+               token->kind = TOKEN_ELSE;
+            }
+            else if(string_equals(token->lexeme, S("for")))
+            {
+               token->kind = TOKEN_FOR;
+            }
+            else if(string_equals(token->lexeme, S("while")))
+            {
+               token->kind = TOKEN_WHILE;
+            }
+            else if(string_equals(token->lexeme, S("and")))
+            {
+               token->kind = TOKEN_AND;
+            }
+            else if(string_equals(token->lexeme, S("or")))
+            {
+               token->kind = TOKEN_OR;
+            }
+            else if(string_equals(token->lexeme, S("return")))
+            {
+               token->kind = TOKEN_RETURN;
+            }
+            else if(string_equals(token->lexeme, S("true")))
+            {
+               token->kind = TOKEN_TRUE;
+            }
+            else if(string_equals(token->lexeme, S("false")))
+            {
+               token->kind = TOKEN_FALSE;
+            }
+            else if(string_equals(token->lexeme, S("nil")))
+            {
+               token->kind = TOKEN_NIL;
+            }
+            else
+            {
+               token->kind = TOKEN_IDENTIFIER;
+            }
+
          } break;
 
          case '1': case '2': case '3': case '4': case '5':

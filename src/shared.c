@@ -29,6 +29,19 @@ typedef struct {
    memindex length;
 } string;
 
+#define S(s) (string){s, countof(s)-1}
+
+static bool string_equals(string a, string b)
+{
+   bool result = false;
+   if(a.length == b.length)
+   {
+      result = (a.length == 0) || !memcmp(a.data, b.data, a.length);
+   }
+
+   return(result);
+}
+
 static bool encountered_error;
 
 static void error(int line, char *message)
