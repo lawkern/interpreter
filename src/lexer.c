@@ -22,7 +22,8 @@ typedef enum {
    TOKEN_FLOAT,
 
    TOKEN_COLON,
-   TOKEN_ASSIGNMENT,
+   TOKEN_COLONEQUAL,
+   TOKEN_COLONCOLON,
    TOKEN_EQUAL,
    TOKEN_NOT,
    TOKEN_NOTEQUAL,
@@ -123,8 +124,52 @@ static void lex(memarena *perma, memarena trans, char *code)
          case '+': {token->kind = TOKEN_PLUS;} break;
          case '*': {token->kind = TOKEN_ASTERISK;} break;
          case '/': {token->kind = TOKEN_SLASH;} break;
+         case '=': {token->kind = TOKEN_EQUAL;} break;
 
-         case ':': {token->kind = TOKEN_COLON;} break;
+         case ':': {
+            token->kind = TOKEN_COLON;
+            if(code[1])
+            {
+               if(code[1] == '=')
+               {
+                  token->kind = TOKEN_COLONEQUAL;
+                  token->lexeme.length = 2;
+               }
+               else if(code[1] == ':')
+               {
+                  token->kind = TOKEN_COLONCOLON;
+                  token->lexeme.length = 2;
+               }
+            }
+         } break;
+
+         case '!': {
+            token->kind = TOKEN_NOT;
+            if(code[1] && code[1] == '=')
+            {
+               token->kind = TOKEN_NOTEQUAL;
+               token->lexeme.length = 2;
+            }
+         } break;
+
+
+         case '>': {
+            token->kind = TOKEN_GT;
+            if(code[1] && code[1] == '=')
+            {
+               token->kind = TOKEN_GTE;
+               token->lexeme.length = 2;
+            }
+         } break;
+
+         case '<': {
+            token->kind = TOKEN_LT;
+            if(code[1] && code[1] == '=')
+            {
+               token->kind = TOKEN_LTE;
+               token->lexeme.length = 2;
+            }
+         } break;
 
          case '_':
          case 'A': case 'B': case 'C': case 'D': case 'E':

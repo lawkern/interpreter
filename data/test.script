@@ -3,5 +3,20 @@
 
 function Main :: (Arguments : []string)
 {
-   return (0);
+   Result := 100;
+   if(!true)
+   {
+   }
+
+   if Result >= 60
+   {
+      print("This is true.");
+   }
+
+   if Result != 100
+   {
+      print("This is false".);
+   }
+
+   return (Result);
 }
