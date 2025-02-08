@@ -117,6 +117,13 @@ static void lex(memarena *perma, memarena trans, char *code)
 
       switch(*code)
       {
+         case '(': {token->kind = TOKEN_PAREN_OPEN;} break;
+         case ')': {token->kind = TOKEN_PAREN_CLOSE;} break;
+         case '[': {token->kind = TOKEN_BRACKET_OPEN;} break;
+         case ']': {token->kind = TOKEN_BRACKET_CLOSE;} break;
+         case '{': {token->kind = TOKEN_BRACE_OPEN;} break;
+         case '}': {token->kind = TOKEN_BRACE_CLOSE;} break;
+
          case ',': {token->kind = TOKEN_COMMA;} break;
          case '.': {token->kind = TOKEN_PERIOD;} break;
          case ';': {token->kind = TOKEN_SEMICOLON;} break;
