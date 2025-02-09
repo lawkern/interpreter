@@ -51,33 +51,43 @@ typedef enum {
 } token_kind;
 
 typedef struct {
+   int line;
+   int column;
+} token_location;
+
+typedef struct {
    token_kind kind;
+   token_location location;
+
    string lexeme;
    union
    {
       u64 integer_value;
       double float_value;
    };
-
-   int line;
 } lexical_token;
 
 static int token_count;
 static lexical_token tokens[1 << 24];
 
-static void consume_whitespace(char **code, int *line)
+static void consume_whitespace(char **code, token_location *location)
 {
    while(**code)
    {
       char c = **code;
 
-      if(c == ' ' || c == '\t' || c == '\f' || c == '\v')
+      if(c == ' ' || c == '\t')
       {
-         // NOTE: Skip it.
+         location->column++;
       }
       else if(c == '\n')
       {
-         (*line)++;
+         location->line++;
+         location->column = 0;
+      }
+      else if(c == '\r' || c == '\f' || c == '\v')
+      {
+         // NOTE: Skip it.
       }
       else
       {
@@ -103,18 +113,18 @@ static bool is_identifier(char c)
 
 static void lex(memarena *perma, memarena trans, char *code)
 {
-   int line = 1;
+   token_location location = {1, 0};
 
    while(*code)
    {
-      consume_whitespace(&code, &line);
+      consume_whitespace(&code, &location);
       if(*code == 0)
       {
          break;
       }
 
       lexical_token *token = tokens + token_count++;
-      token->line = line;
+      token->location = location;
       token->lexeme = (string){code, 1};
 
       switch(*code)
@@ -313,14 +323,16 @@ static void lex(memarena *perma, memarena trans, char *code)
       }
 
       code += token->lexeme.length;
+      location.column += token->lexeme.length;
    }
 
    for(int index = 0; index < token_count; ++index)
    {
       lexical_token *token = tokens + index;
-      printf("[TOKEN %2d, Line %d]: %.*s\n",
+      printf("[TOKEN %2d, (%3d, %3d)]: %.*s\n",
              token->kind,
-             token->line,
+             token->location.line,
+             token->location.column,
              (int)token->lexeme.length,
              token->lexeme.data);
    }
