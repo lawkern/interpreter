@@ -1,22 +1,51 @@
-12 + 10;
-14.55 + 15.0;
+MAX_POSITION_COUNT :: 100;
 
-function Main :: (Arguments : []string)
+struct Coordinates
+{
+   Count     : int;
+   Positions : [MAX_POSITION_COUNT] vec2;
+};
+
+global C : Coordinates;
+
+sub Foo :: {
+    C.Count = 1;
+    C.Positions[0] = {16.0, -21.0};
+}
+
+sub Bar : (A : int) : {
+   "%d".(12 + 10 * A);
+}
+
+sub Baz :: word
+{
+   return (0x00112233_44556677_8899AABB_CCDDEEFF);
+}
+
+sub Bat : (A : int, Fn : (B : int) :) : {
+    Fn (A);
+}
+
+program Main : (Arguments : []string) : int
 {
    Result := 100;
-   if(!true)
-   {
-   }
+   if (Result = 0) break;
 
    if Result >= 60
    {
-      print("This is true.");
+      "This is true.";
    }
 
-   if Result != 100
+   if Result = 99
    {
-      print("This is false".);
+      "This is false.";
    }
+
+   Bat (32, Bar);
+
+   Bat (33, (X : int) : {
+      "%d".(X);
+   });
 
    return (Result);
 }

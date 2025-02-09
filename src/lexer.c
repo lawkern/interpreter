@@ -33,7 +33,9 @@ typedef enum {
    TOKEN_LTE,
 
    TOKEN_STRUCT,
-   TOKEN_FUNCTION,
+   TOKEN_GLOBAL,
+   TOKEN_PROGRAM,
+   TOKEN_SUBROUTINE,
    TOKEN_IF,
    TOKEN_ELSE,
    TOKEN_FOR,
@@ -205,9 +207,17 @@ static void lex(memarena *perma, memarena trans, char *code)
             {
                token->kind = TOKEN_STRUCT;
             }
-            else if(string_equals(token->lexeme, S("function")))
+            else if(string_equals(token->lexeme, S("global")))
             {
-               token->kind = TOKEN_FUNCTION;
+               token->kind = TOKEN_GLOBAL;
+            }
+            else if(string_equals(token->lexeme, S("program")))
+            {
+               token->kind = TOKEN_PROGRAM;
+            }
+            else if(string_equals(token->lexeme, S("sub")))
+            {
+               token->kind = TOKEN_SUBROUTINE;
             }
             else if(string_equals(token->lexeme, S("if")))
             {
