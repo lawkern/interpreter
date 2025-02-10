@@ -319,13 +319,16 @@ static void lex(memarena *perma, memarena trans, char *code)
             token->lexeme.length = length;
          } break;
 
-         default: {token->kind = TOKEN_NIL;} break;
+         default: {
+            error(location.line, location.column, "Unexpected character %c.", *code);
+         } break;
       }
 
       code += token->lexeme.length;
       location.column += token->lexeme.length;
    }
 
+   printf("--\n");
    for(int index = 0; index < token_count; ++index)
    {
       lexical_token *token = tokens + index;

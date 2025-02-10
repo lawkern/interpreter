@@ -28,6 +28,7 @@ sub Bat : (A : int, Fn : (B : int) :) : {
 
 program Main : (Arguments : []string) : int
 {
+~~
    Result := 100;
    if (Result = 0) break;
 

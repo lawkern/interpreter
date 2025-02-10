@@ -1,18 +1,5 @@
 /* (c) copyright 2025 Lawrence D. Kern ////////////////////////////////////// */
 
-#include <assert.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <stdint.h>
-typedef uint8_t u8;
-typedef uint64_t u64;
-
-#include <stddef.h>
-typedef ptrdiff_t memindex;
-
 #include "shared.c"
 #include "lexer.c"
 
@@ -20,7 +7,7 @@ static void execute(memarena *perma, memarena trans, char *code)
 {
    if(code[0] == 'e')
    {
-      error(0, "Successfully activated error handling.");
+      error(0, 0, "Successfully activated error handling.");
    }
    else
    {

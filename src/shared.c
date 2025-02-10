@@ -1,5 +1,19 @@
 /* (c) copyright 2025 Lawrence D. Kern ////////////////////////////////////// */
 
+#include <assert.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint64_t u64;
+
+#include <stddef.h>
+typedef ptrdiff_t memindex;
+
 #define countof(a) (sizeof(a) / sizeof((a)[0]))
 
 typedef struct {
@@ -44,8 +58,18 @@ static bool string_equals(string a, string b)
 
 static bool encountered_error;
 
-static void error(int line, char *message)
+static void error(int line, int column, char *format, ...)
 {
    encountered_error = true;
-   fprintf(stderr, "[ERROR (%d)]: %s\n", line, message);
+
+   char message[512];
+
+   va_list arguments;
+   va_start(arguments, format);
+   {
+      vsnprintf(message, sizeof(message), format, arguments);
+   }
+   va_end(arguments);
+
+   fprintf(stderr, "[ERROR (%d, %d)]: %s\n", line, column, message);
 }
