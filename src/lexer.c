@@ -98,9 +98,16 @@ static void consume_whitespace(char **code, token_location *location)
    }
 }
 
-static bool is_digit(char c)
+static bool is_decimal(char c)
 {
    return (c >= '0' && c <= '9');
+}
+
+static bool is_hexadecimal(char c)
+{
+   return ((c >= '0' && c <= '9') ||
+           (c >= 'a' && c <= 'f') ||
+           (c >= 'A' && c <= 'F'));
 }
 
 static bool is_identifier(char c)
@@ -117,6 +124,11 @@ static void lex(memarena *perma, memarena trans, char *code)
 
    while(*code)
    {
+      if(encountered_error)
+      {
+         break;
+      }
+
       consume_whitespace(&code, &location);
       if(*code == 0)
       {
@@ -295,25 +307,34 @@ static void lex(memarena *perma, memarena trans, char *code)
          case '1': case '2': case '3': case '4': case '5':
          case '6': case '7': case '8': case '9': case '0':
          {
+            token->kind = TOKEN_INTEGER;
+
             memindex length = 0;
-            while(code[length] && is_digit(code[length]))
+            if(code[length] && code[length] == '0' && code[length + 1] == 'x')
             {
-               length++;
-            }
-
-            if(code[length] == '.')
-            {
-               token->kind = TOKEN_FLOAT;
-               length++;
-
-               while(code[length] && is_digit(code[length]))
+               length += 2;
+               while(code[length] && (is_hexadecimal(code[length]) || code[length] == '_'))
                {
                   length++;
                }
             }
             else
             {
-               token->kind = TOKEN_INTEGER;
+               while(code[length] && (is_decimal(code[length]) || code[length] == '_'))
+               {
+                  length++;
+               }
+
+               if(code[length] == '.')
+               {
+                  token->kind = TOKEN_FLOAT;
+                  length++;
+
+                  while(code[length] && (is_decimal(code[length]) || code[length] == '_'))
+                  {
+                     length++;
+                  }
+               }
             }
 
             token->lexeme.length = length;
