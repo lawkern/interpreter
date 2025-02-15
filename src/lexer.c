@@ -67,138 +67,190 @@ typedef struct {
    };
 } lexical_token;
 
+typedef struct {
+   token_location location;
+
+   memindex index;
+   memindex count;
+
+   char *text;
+} text_stream;
+
 static int token_count;
 static lexical_token tokens[1 << 24];
 
-static void consume_whitespace(char **code, token_location *location)
-{
-   while(**code)
-   {
-      char c = **code;
-
-      if(c == ' ' || c == '\t')
-      {
-         location->column++;
-      }
-      else if(c == '\n')
-      {
-         location->line++;
-         location->column = 0;
-      }
-      else if(c == '\r' || c == '\f' || c == '\v')
-      {
-         // NOTE: Skip it.
-      }
-      else
-      {
-         break;
-      }
-
-      (*code)++;
-   }
-}
-
 static bool is_decimal(char c)
 {
-   return (c >= '0' && c <= '9');
+   return(c >= '0' && c <= '9');
 }
 
 static bool is_hexadecimal(char c)
 {
-   return ((c >= '0' && c <= '9') ||
-           (c >= 'a' && c <= 'f') ||
-           (c >= 'A' && c <= 'F'));
+   return((c >= '0' && c <= '9') ||
+          (c >= 'a' && c <= 'f') ||
+          (c >= 'A' && c <= 'F'));
 }
 
 static bool is_identifier(char c)
 {
-   return ((c >= '0' && c <= '9') ||
-           (c >= 'A' && c <= 'Z') ||
-           (c >= 'a' && c <= 'z') ||
-           (c == '_'));
+   return((c >= '0' && c <= '9') ||
+          (c >= 'A' && c <= 'Z') ||
+          (c >= 'a' && c <= 'z') ||
+          (c == '_'));
 }
 
-static void lex(memarena *perma, memarena trans, char *code)
+static bool is_newline(char c)
 {
-   token_location location = {1, 0};
+   return(c == '\n');
+}
 
-   while(*code)
+static bool is_whitespace(char c)
+{
+   return((c == ' ')  ||
+          (c == '\t') ||
+          (c == '\n') ||
+          (c == '\r') ||
+          (c == '\f') ||
+          (c == '\v'));
+}
+
+static char peek_text(text_stream *stream)
+{
+   // TODO: This does not support embedded zeros. Maybe we care about that?
+
+   char result = 0;
+   if(stream->index < stream->count)
+   {
+      result = stream->text[stream->index];
+   }
+   return(result);
+}
+
+static char advance_text(text_stream *stream)
+{
+   // assert(stream->index < stream->count);
+
+   char result = stream->text[stream->index++];
+
+   if(is_newline(result))
+   {
+      stream->location.column = 0;
+      stream->location.line++;
+   }
+   else
+   {
+      stream->location.column++;
+   }
+
+   return(result);
+}
+
+// static bool is_text(text_stream *stream, char c)
+// {
+//    bool result = (peek_text(stream) == c);
+//    return(result);
+// }
+
+static bool match_text(text_stream *stream, char c)
+{
+   bool result = (peek_text(stream) == c);
+   if(result)
+   {
+      advance_text(stream);
+   }
+   return(result);
+}
+
+static char expect_text(text_stream *stream, char c)
+{
+   char result = advance_text(stream);
+   if(result != c)
+   {
+      error(stream->location.line, stream->location.column,
+            "Expected '%c', found '%c'.", c, result);
+   }
+   return(result);
+}
+
+static void lex(memarena *perma, memarena trans, text_stream stream)
+{
+   while(stream.index < stream.count)
    {
       if(encountered_error)
       {
          break;
       }
 
-      consume_whitespace(&code, &location);
-      if(*code == 0)
+      while(is_whitespace(peek_text(&stream)))
       {
-         break;
+         advance_text(&stream);
       }
 
       lexical_token *token = tokens + token_count++;
-      token->location = location;
-      token->lexeme = (string){code, 1};
+      token->location = stream.location;
+      token->lexeme = (string){stream.text+stream.index, 1};
 
-      switch(*code)
+      switch(peek_text(&stream))
       {
-         case '(': {token->kind = TOKEN_PAREN_OPEN;} break;
-         case ')': {token->kind = TOKEN_PAREN_CLOSE;} break;
-         case '[': {token->kind = TOKEN_BRACKET_OPEN;} break;
-         case ']': {token->kind = TOKEN_BRACKET_CLOSE;} break;
-         case '{': {token->kind = TOKEN_BRACE_OPEN;} break;
-         case '}': {token->kind = TOKEN_BRACE_CLOSE;} break;
+         case 0: {} break;
 
-         case ',': {token->kind = TOKEN_COMMA;} break;
-         case '.': {token->kind = TOKEN_PERIOD;} break;
-         case ';': {token->kind = TOKEN_SEMICOLON;} break;
-         case '-': {token->kind = TOKEN_MINUS;} break;
-         case '+': {token->kind = TOKEN_PLUS;} break;
-         case '*': {token->kind = TOKEN_ASTERISK;} break;
-         case '/': {token->kind = TOKEN_SLASH;} break;
-         case '=': {token->kind = TOKEN_EQUAL;} break;
+         case '(': {advance_text(&stream); token->kind = TOKEN_PAREN_OPEN;} break;
+         case ')': {advance_text(&stream); token->kind = TOKEN_PAREN_CLOSE;} break;
+         case '[': {advance_text(&stream); token->kind = TOKEN_BRACKET_OPEN;} break;
+         case ']': {advance_text(&stream); token->kind = TOKEN_BRACKET_CLOSE;} break;
+         case '{': {advance_text(&stream); token->kind = TOKEN_BRACE_OPEN;} break;
+         case '}': {advance_text(&stream); token->kind = TOKEN_BRACE_CLOSE;} break;
+
+         case ',': {advance_text(&stream); token->kind = TOKEN_COMMA;} break;
+         case '.': {advance_text(&stream); token->kind = TOKEN_PERIOD;} break;
+         case ';': {advance_text(&stream); token->kind = TOKEN_SEMICOLON;} break;
+         case '-': {advance_text(&stream); token->kind = TOKEN_MINUS;} break;
+         case '+': {advance_text(&stream); token->kind = TOKEN_PLUS;} break;
+         case '*': {advance_text(&stream); token->kind = TOKEN_ASTERISK;} break;
+         case '/': {advance_text(&stream); token->kind = TOKEN_SLASH;} break;
+         case '=': {advance_text(&stream); token->kind = TOKEN_EQUAL;} break;
 
          case ':': {
+            expect_text(&stream, ':');
+
             token->kind = TOKEN_COLON;
-            if(code[1])
+            if(match_text(&stream, '='))
             {
-               if(code[1] == '=')
-               {
-                  token->kind = TOKEN_COLONEQUAL;
-                  token->lexeme.length = 2;
-               }
-               else if(code[1] == ':')
-               {
-                  token->kind = TOKEN_COLONCOLON;
-                  token->lexeme.length = 2;
-               }
+               token->kind = TOKEN_COLONEQUAL;
+            }
+            else if(match_text(&stream, ':'))
+            {
+               token->kind = TOKEN_COLONCOLON;
             }
          } break;
 
          case '!': {
+            expect_text(&stream, '!');
+
             token->kind = TOKEN_NOT;
-            if(code[1] && code[1] == '=')
+            if(match_text(&stream, '='))
             {
                token->kind = TOKEN_NOTEQUAL;
-               token->lexeme.length = 2;
             }
          } break;
 
-
          case '>': {
+            expect_text(&stream, '>');
+
             token->kind = TOKEN_GT;
-            if(code[1] && code[1] == '=')
+            if(match_text(&stream, '='))
             {
                token->kind = TOKEN_GTE;
-               token->lexeme.length = 2;
             }
          } break;
 
          case '<': {
+            expect_text(&stream, '<');
+
             token->kind = TOKEN_LT;
-            if(code[1] && code[1] == '=')
+            if(match_text(&stream, '='))
             {
                token->kind = TOKEN_LTE;
-               token->lexeme.length = 2;
             }
          } break;
 
@@ -216,13 +268,12 @@ static void lex(memarena *perma, memarena trans, char *code)
          case 'u': case 'v': case 'w': case 'x': case 'y':
          case 'z':
          {
-            memindex length = 0;
-            while(code[length] && is_identifier(code[length]))
+            memindex start = stream.index;
+            while(stream.index < stream.count && is_identifier(stream.text[stream.index]))
             {
-               length++;
+               advance_text(&stream);
             }
-
-            token->lexeme.length = length;
+            token->lexeme.length = stream.index - start;
 
             // TODO: This is obviously silly. Implement string interning.
             if(string_equals(token->lexeme, S("struct")))
@@ -289,19 +340,15 @@ static void lex(memarena *perma, memarena trans, char *code)
          } break;
 
          case '"': {
+            expect_text(&stream, '"');
+
             token->kind = TOKEN_STRING;
 
-            memindex length = 1;
-            while(code[length] && code[length] != '"')
+            while(peek_text(&stream) != '"')
             {
-               length++;
+               advance_text(&stream);
             }
-            while(code[length] && code[length] == '"')
-            {
-               length++;
-            }
-
-            token->lexeme.length = length;
+            expect_text(&stream, '"');
          } break;
 
          case '1': case '2': case '3': case '4': case '5':
@@ -309,44 +356,43 @@ static void lex(memarena *perma, memarena trans, char *code)
          {
             token->kind = TOKEN_INTEGER;
 
-            memindex length = 0;
-            if(code[length] && code[length] == '0' && code[length + 1] == 'x')
+            if((stream.index + 1) < stream.count &&
+               stream.text[stream.index + 0] == '0' &&
+               stream.text[stream.index + 1] == 'x')
             {
-               length += 2;
-               while(code[length] && (is_hexadecimal(code[length]) || code[length] == '_'))
+               stream.index += 2;
+               while(stream.index < stream.count && (is_hexadecimal(stream.text[stream.index]) || stream.text[stream.index] == '_'))
                {
-                  length++;
+                  advance_text(&stream);
                }
             }
             else
             {
-               while(code[length] && (is_decimal(code[length]) || code[length] == '_'))
+               while(stream.index < stream.count && (is_decimal(stream.text[stream.index]) || stream.text[stream.index] == '_'))
                {
-                  length++;
+                  advance_text(&stream);
                }
 
-               if(code[length] == '.')
+               if(stream.text[stream.index] == '.')
                {
                   token->kind = TOKEN_FLOAT;
-                  length++;
+                  advance_text(&stream);
 
-                  while(code[length] && (is_decimal(code[length]) || code[length] == '_'))
+                  while(stream.index < stream.count && (is_decimal(stream.text[stream.index]) || stream.text[stream.index] == '_'))
                   {
-                     length++;
+                     advance_text(&stream);
                   }
                }
             }
-
-            token->lexeme.length = length;
          } break;
 
          default: {
-            error(location.line, location.column, "Unexpected character %c.", *code);
+            char c = advance_text(&stream);
+            error(stream.location.line, stream.location.column, "Unexpected character %c.", c);
          } break;
       }
 
-      code += token->lexeme.length;
-      location.column += token->lexeme.length;
+      token->lexeme.length = (stream.text + stream.index) - token->lexeme.data;
    }
 
    printf("--\n");

@@ -3,15 +3,15 @@
 #include "shared.c"
 #include "lexer.c"
 
-static void execute(memarena *perma, memarena trans, char *code)
+static void execute(memarena *perma, memarena trans, text_stream stream)
 {
-   if(code[0] == 'e')
+   if(stream.text[stream.index] == 'e')
    {
       error(0, 0, "Successfully activated error handling.");
    }
    else
    {
-      lex(perma, trans, code);
+      lex(perma, trans, stream);
    }
 }
 
@@ -29,7 +29,12 @@ static void execute_script(memarena *perma, memarena trans, char *path)
       if(read == size)
       {
          code[size] = 0;
-         execute(perma, trans, code);
+
+         text_stream stream = {0};
+         stream.count = size;
+         stream.text = code;
+
+         execute(perma, trans, stream);
       }
       else
       {
@@ -54,7 +59,11 @@ static void execute_commands(memarena *perma, memarena trans)
       printf("> ");
       if(fgets(command, countof(command), stdin))
       {
-         execute(perma, trans, command);
+         text_stream stream = {0};
+         stream.count = strlen(command);
+         stream.text = command;
+
+         execute(perma, trans, stream);
       }
       else
       {

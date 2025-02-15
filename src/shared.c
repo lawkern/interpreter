@@ -71,5 +71,6 @@ static void error(int line, int column, char *format, ...)
    }
    va_end(arguments);
 
-   fprintf(stderr, "[ERROR (%d, %d)]: %s\n", line, column, message);
+   // NOTE: For the sake of simplicity, line is stored 0-indexed.
+   fprintf(stderr, "[ERROR (%d, %d)]: %s\n", line + 1, column, message);
 }

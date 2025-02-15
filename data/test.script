@@ -9,8 +9,8 @@ struct Coordinates
 global C : Coordinates;
 
 sub Foo :: {
-    C.Count = 1;
-    C.Positions[0] = {16.0, -21.0};
+    C.Count := 1;
+    C.Positions[0] := {16.0, -21.0};
 }
 
 sub Bar : (A : int) : {
@@ -28,7 +28,6 @@ sub Bat : (A : int, Fn : (B : int) :) : {
 
 program Main : (Arguments : []string) : int
 {
-~~
    Result := 100;
    if (Result = 0) break;
 
