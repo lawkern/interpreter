@@ -394,7 +394,10 @@ static void lex(memarena *perma, memarena trans, text_stream stream)
 
       token->lexeme.length = (stream.text + stream.index) - token->lexeme.data;
    }
+}
 
+static void print_tokens(void)
+{
    printf("--\n");
    for(int index = 0; index < token_count; ++index)
    {

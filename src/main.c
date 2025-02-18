@@ -2,6 +2,7 @@
 
 #include "shared.c"
 #include "lexer.c"
+#include "parser.c"
 
 static void execute(memarena *perma, memarena trans, text_stream stream)
 {
@@ -12,6 +13,7 @@ static void execute(memarena *perma, memarena trans, text_stream stream)
    else
    {
       lex(perma, trans, stream);
+      parse();
    }
 }
 
